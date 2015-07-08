@@ -145,8 +145,9 @@ class Plugin(object):
     #     return d
 
     def __del__(self):
-        pass
-        # print 'Goodbye',self
+        self._alive = False
+
+
 
 # Derived base classes:
 # If you inherit from these your plugin property base_class will point to them
@@ -235,3 +236,9 @@ class Plugin_List(object):
                 # any object without a get_init_dict method will throw this exception.
                 pass
         return initializers
+
+
+
+
+
+

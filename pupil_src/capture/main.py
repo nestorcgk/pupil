@@ -11,20 +11,20 @@
 import sys, os, platform
 from ctypes import c_bool, c_double
 
-forking_enable = lambda _: _ #dummy fn
-
 if platform.system() == 'Darwin':
-    from billiard import Process, Pipe, Queue, Value, freeze_support
-    if getattr(sys, 'frozen', False):
-        from billiard import forking_enable
+    from billiard import Process, Pipe, Queue, Value, freeze_support, forking_enable
 else:
     from multiprocessing import Process, Pipe, Queue, Value, freeze_support
+    forking_enable = lambda _: _ #dummy fn
 
 if getattr(sys, 'frozen', False):
     # Specifiy user dirs.
     user_dir = os.path.expanduser(os.path.join('~','pupil_capture_settings'))
     version_file = os.path.join(sys._MEIPASS,'_version_string_')
+
+
 else:
+    # We are running in a normal Python environment.
     # Make all pupil shared_modules available to this Python session.
     pupil_base_dir = os.path.abspath(__file__).rsplit('pupil_src', 1)[0]
     sys.path.append(os.path.join(pupil_base_dir, 'pupil_src', 'shared_modules'))
@@ -40,6 +40,7 @@ else:
 # create folder for user settings, tmp data
 if not os.path.isdir(user_dir):
     os.mkdir(user_dir)
+
 
 from version_utils import get_version
 
@@ -92,23 +93,26 @@ class Global_Container(object):
 def main():
 
     # To assign camera by name: put string(s) in list
-    eye_cam_names = ["USB 2.0 Camera","Microsoft", "6000","Integrated Camera","HD USB Camera"]
-    world_src = ["Logitech Camera","(046d:081d)","C510","B525", "C525","C615","C920","C930e"]
-    eye_src = (eye_cam_names,0),(eye_cam_names,1) #first match for eye0 and second match for eye1
+    #eye_cam_names = ["USB 2.0 Camera","Microsoft", "6000","Integrated Camera","HD USB Camera"]
+    #eye_cam_names = ["Logitech Camera","(046d:081d)","C510","B525", "C525","C615","C920","C930e","HD Pro Webcam C920", "HD Pro Webcam"]
+    #world_src = ["Logitech Camera","(046d:081d)","C510","B525", "C525","C615","C920","C930e","HD Pro Webcam C920", "HD Pro Webcam"]
+    #eye_src = (eye_cam_names,0),(eye_cam_names,1) #first match for eye0 and second match for eye1
+    #eye_src = (eye_cam_names,0)
 
     # to assign cameras directly, using integers as demonstrated below
-    # eye_src =  4 , 5 #second arg will be ignored for monocular eye trackers
-    # world_src = 1
+    eye_src = 0, 5 #second arg will be ignored for monocular eye trackers
+    world_src = 2
 
     # to use a pre-recorded video.
     # Use a string to specify the path to your video file as demonstrated below
-    # eye_src = '/Users/mkassner/Downloads/000/eye0.mkv' , '/Users/mkassner/Downloads/eye.avi'
-    # world_src = "/Users/mkassner/Downloads/000/world.mkv"
+    # eye_src = '/Users/mkassner/Downloads/eye.avi' , '/Users/mkassner/Downloads/eye.avi'
+    # world_src = "/Users/mkassner/Desktop/2014_01_21/000/world.avi"
 
     # Camera video size in pixels (width,height)
     eye_size = (640,480)
-    world_size = (1280,720)
-
+    #eye_size = (1280,720)
+    #world_size = (1280,720)    
+    world_size = (640,480)    
 
     # on MacOS we will not use os.fork, elsewhere this does nothing.
     forking_enable(0)
@@ -137,9 +141,11 @@ def main():
 
     world(g_pool,world_src,world_size)
 
+
     # Exit / clean-up
     for p in p_eye:
         p.join()
+
 if __name__ == '__main__':
     freeze_support()
     main()

@@ -12,7 +12,7 @@ import os
 import cv2
 import numpy as np
 from methods import normalize,denormalize
-from gl_utils import adjust_gl_view,clear_gl_screen,basic_gl_setup
+from gl_utils import draw_gl_point,adjust_gl_view,clear_gl_screen,basic_gl_setup
 import OpenGL.GL as gl
 from glfw import *
 import calibrate
@@ -42,6 +42,8 @@ def draw_marker(pos,r,alpha):
 def on_resize(window,w,h):
     active_window = glfwGetCurrentContext()
     glfwMakeContextCurrent(window)
+    hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
+    w,h = w*hdpi_factor, h*hdpi_factor
     adjust_gl_view(w,h)
     glfwMakeContextCurrent(active_window)
 
@@ -184,7 +186,11 @@ class Screen_Marker_Calibration(Calibration_Plugin):
         if not self._window:
             if self.fullscreen:
                 monitor = glfwGetMonitors()[self.monitor_idx]
-                width,height,redBits,blueBits,greenBits,refreshRate = glfwGetVideoMode(monitor)
+                mode = glfwGetVideoMode(monitor)
+                # glfwGetFramebufferSize(window)
+                hdpi_factor = glfwGetFramebufferSize(glfwGetCurrentContext())[0]/glfwGetWindowSize(glfwGetCurrentContext())[0]
+                width,height= mode[0]*hdpi_factor,mode[1]*hdpi_factor
+
             else:
                 monitor = None
                 width,height= 640,360
@@ -194,13 +200,13 @@ class Screen_Marker_Calibration(Calibration_Plugin):
                 glfwSetWindowPos(self._window,200,0)
 
             glfwSetInputMode(self._window,GLFW_CURSOR,GLFW_CURSOR_HIDDEN)
+            on_resize(self._window,width,height)
 
             #Register callbacks
-            glfwSetFramebufferSizeCallback(self._window,on_resize)
+            glfwSetWindowSizeCallback(self._window,on_resize)
             glfwSetKeyCallback(self._window,self.on_key)
             glfwSetWindowCloseCallback(self._window,self.on_close)
             glfwSetMouseButtonCallback(self._window,self.on_button)
-            on_resize(self._window,*glfwGetFramebufferSize(self._window))
 
             # gl_state settings
             active_window = glfwGetCurrentContext()
